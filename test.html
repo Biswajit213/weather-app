@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App - API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App - API Connection Test</h1>
+        
+        <div class="test-section">
+            <h3>Setup Checklist</h3>
+            <div id="setupChecklist">
+                <p>✓ HTML file created</p>
+                <p>✓ CSS file created</p>
+                <p>✓ JavaScript file created</p>
+                <p id="apiKeyCheck" class="warning">⚠ API key needs to be configured</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>API Connection Test</h3>
+            <p>Click the button below to test your OpenWeatherMap API connection:</p>
+            <button onclick="testAPI()">Test API Connection</button>
+            <button onclick="testGeolocation()">Test Geolocation</button>
+        </div>
+
+        <div id="results"></div>
+
+        <div class="test-section">
+            <h3>Setup Instructions</h3>
+            <ol>
+                <li>Get your free API key from <a href="https://www.tomorrow.io/" target="_blank">Tomorrow.io</a></li>
+                <li>Open <code>script.js</code> file</li>
+                <li>Replace <code>'YOUR_API_KEY_HERE'</code> with your actual Tomorrow.io API key</li>
+                <li>Save the file and test again</li>
+                <li>Open <code>index.html</code> to use the weather app</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Simple API test function
+        async function testAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.textContent = 'Testing API connection...\n';
+
+            // Test with a simple city
+            const testCity = 'London';
+            const apiKey = 'jxUerOJ7mTsxTCXdDpmjQdfo62y3NtEN'; // This should match what's in script.js
+            
+            if (apiKey === 'YOUR_API_KEY_HERE') {
+                resultsDiv.textContent = 'ERROR: API key not configured!\n\nPlease follow the setup instructions above.';
+                resultsDiv.className = 'error';
+                return;
+            }
+
+            try {
+                // Test Tomorrow.io API with coordinates (London: 51.5074, -0.1278)
+                const url = `https://api.tomorrow.io/v4/weather/realtime?location=51.5074,-0.1278&apikey=${apiKey}&units=metric`;
+                const response = await fetch(url);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const values = data.data.values;
+                    resultsDiv.textContent = `SUCCESS! Tomorrow.io API connection working.\n\nTest data for London:\nTemperature: ${values.temperature}°C\nHumidity: ${values.humidity}%\nWind Speed: ${values.windSpeed} km/h\nWeather Code: ${values.weatherCode}`;
+                    resultsDiv.className = 'success';
+
+                    // Update checklist
+                    document.getElementById('apiKeyCheck').textContent = '✓ Tomorrow.io API key configured and working';
+                    document.getElementById('apiKeyCheck').className = 'success';
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                resultsDiv.textContent = `ERROR: ${error.message}\n\nPossible issues:\n- Invalid Tomorrow.io API key\n- Network connection problem\n- API service unavailable\n- API quota exceeded`;
+                resultsDiv.className = 'error';
+            }
+        }
+
+        function testGeolocation() {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!navigator.geolocation) {
+                resultsDiv.textContent = 'ERROR: Geolocation is not supported by this browser.';
+                resultsDiv.className = 'error';
+                return;
+            }
+
+            resultsDiv.textContent = 'Testing geolocation...\n';
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    resultsDiv.textContent = `SUCCESS! Geolocation working.\n\nYour coordinates:\nLatitude: ${position.coords.latitude}\nLongitude: ${position.coords.longitude}\nAccuracy: ${position.coords.accuracy} meters`;
+                    resultsDiv.className = 'success';
+                },
+                (error) => {
+                    let errorMessage = 'Geolocation error: ';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage += 'Permission denied by user';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage += 'Position unavailable';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage += 'Request timeout';
+                            break;
+                        default:
+                            errorMessage += 'Unknown error';
+                    }
+                    resultsDiv.textContent = errorMessage;
+                    resultsDiv.className = 'error';
+                }
+            );
+        }
+
+        // Check if running locally
+        if (location.protocol === 'file:') {
+            document.body.insertAdjacentHTML('afterbegin', 
+                '<div style="background: #fff3cd; padding: 10px; margin-bottom: 20px; border-radius: 5px; text-align: center;">' +
+                '<strong>Note:</strong> For best results, run this app on a local server rather than opening the file directly.' +
+                '</div>'
+            );
+        }
+    </script>
+</body>
+</html>
